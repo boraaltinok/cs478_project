@@ -1,7 +1,6 @@
 import math
 import random
 import numpy
-import time
 
 import matplotlib.pyplot as plt
 import matplotlib.tri as tri
@@ -149,36 +148,33 @@ def read_points_from_file(file_path):
         return points
 
  
-X_BOUND = 10000
-Y_BOUND = 10000
+X_BOUND = 1000
+Y_BOUND = 1000
 n = 10  # n should be greater than 2
 
 xs0 = [random.randint(1, X_BOUND - 1) for x in range(n)]
 ys0 = [random.randint(1, Y_BOUND - 1) for y in range(n)]
 point_list = list(zip(xs0, ys0))
 
-
-
 # Example usage
-#file_path = 'ten_thousand_points.txt'
-#point_list = read_points_from_file(file_path)
-start = time.time()
-#print("hello")
 
 DT = DelaunayTriangulation(X_BOUND, Y_BOUND)
-i = 0
 for x, y in point_list:
     DT.increment(Point(x, y))
-    i += 1
-    if i % 1000 == 0:
-        checkpoint = time.time()
-        print(i)
-        print(checkpoint - start)
+
+    xs, ys, ts = DT.get_values()
+
+    fig, ax = plt.subplots()
+    ax.margins(0.1)
+    ax.set_aspect('equal')
+
+    ax.triplot(tri.Triangulation(xs, ys, ts), 'k-o')
+    ax.set_title('Plot of Delaunay triangulation')
+
+    plt.show()
 
 DT.remove_frame()
 xs, ys, ts = DT.get_values()
-end = time.time()
-print(end - start)
 fig, ax = plt.subplots()
 ax.margins(0.1)
 ax.set_aspect('equal')

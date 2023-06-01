@@ -105,7 +105,7 @@ def read_points_from_file(file_path):
         content = file.read()
         points = json.loads(content)
         return points
-file_path = 'thousand_points.txt'
+file_path = 'hundo_thousand_points.txt'
 point_list = np.array(read_points_from_file(file_path))
 start = time.time()
 

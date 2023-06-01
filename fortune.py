@@ -7,8 +7,6 @@ points = [
     (7.5, 2.5),
     (6, 7.5),
     (4, 4),
-    (3, 3),
-    (6, 3),
 ]
 
 # Define a bounding box / polygon
