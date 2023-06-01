@@ -1,23 +1,14 @@
-# Simple delaunay triangle generator
-# Implementation of incremental Bowyer-Watson Algorithm
-# This has a time complexity of O(n^2)
-# Refer to the Wikipedia page of Bowyer watson algorithm as I have implemented directly from the Pseudo-code
-
-# Author: Vignesh Rajendiran
-
-# This is written with ease of understanding in mind. If you want elaborate code. Then visit https://github.com/ayron
-# I referred to Ayrons code for inspiration. I am planning to rewrite this code as my own in the future.
-
-# sometimes there will be a cross division error if the n>100 because of random points used and WIDTH, HEIGHT values
-
 import math
 import random
 import numpy
+import time
 
 import matplotlib.pyplot as plt
 import matplotlib.tri as tri
 
 import numpy as np
+
+import json
 
 
 def is_legal(line1, line2):
@@ -56,7 +47,9 @@ class Point:
             return True
         else:
             return False
-
+        
+    def get_values(self):
+        return self.x, self.y
 
 class Triangle:
     def __init__(self, a, b, c):
@@ -71,20 +64,28 @@ class Triangle:
 
         self.neighbour = [None] * 3
 
+    def include(self, point):
+        if (self.v[0] == point) or (self.v[1] == point) or (self.v[2] == point):
+            return True
+        return False
+
+    def get_points(self):
+        return self.v[0], self.v[1], self.v[2]
+
 
 
 class DelaunayTriangulation:
-    def __init__(self, WIDTH, HEIGHT):
+    def __init__(self, WIDTH, HEIGHT, SuperPointA=None, SuperPointB=None, SuperPointC=None):
         self.triangulation = []
 
         # Declaring the super triangle coordinate information
-        self.SuperPointA = Point(-100, -100)
-        self.SuperPointB = Point(2 * WIDTH + 100, -100)
-        self.SuperPointC = Point(-100, 2 * HEIGHT + 100)
+        self.framep1 = Point(-100, -100)
+        self.framep2 = Point(2 * WIDTH + 100, -100)
+        self.framep3 = Point(-100, 2 * HEIGHT + 100)
 
-        superTriangle = Triangle(self.SuperPointA, self.SuperPointB, self.SuperPointC)
+        frame = Triangle(self.framep1, self.framep2, self.framep3)
 
-        self.triangulation.append(superTriangle)
+        self.triangulation.append(frame)
 
     def increment(self, p):
 
@@ -120,40 +121,69 @@ class DelaunayTriangulation:
         for each_edge in polygon:
             newTriangle = Triangle(each_edge[0], each_edge[1], p)
             self.triangulation.append(newTriangle)
-    
-X_BOUND = 1000
-Y_BOUND = 1000
-n = 20  # n should be greater than 2
+            
 
-xs = [random.randint(1, X_BOUND - 1) for x in range(n)]
-ys = [random.randint(1, Y_BOUND - 1) for y in range(n)]
-zs = [0 for z in range(n)]
+    def get_values(self):
+
+        ps = [p for t in self.triangulation for p in t.v]
+
+        xs = [p.x for p in ps]
+        ys = [p.y for p in ps]
+
+
+        ts = [(ps.index(t.v[0]), ps.index(t.v[1]), ps.index(t.v[2])) for t in self.triangulation]
+
+        return xs, ys, ts
+    
+    def remove_frame(self):
+        onSuper = lambda triangle: triangle.include(self.framep1) or triangle.include(self.framep2) or triangle.include(self.framep3)
+
+        for triangle_new in self.triangulation[:]:
+            if onSuper(triangle_new):
+                self.triangulation.remove(triangle_new)
+
+def read_points_from_file(file_path):
+    with open(file_path, 'r') as file:
+        content = file.read()
+        points = json.loads(content)
+        return points
+
+ 
+X_BOUND = 10000
+Y_BOUND = 10000
+n = 10  # n should be greater than 2
+
+xs0 = [random.randint(1, X_BOUND - 1) for x in range(n)]
+ys0 = [random.randint(1, Y_BOUND - 1) for y in range(n)]
+point_list = list(zip(xs0, ys0))
+
+
+
+# Example usage
+#file_path = 'ten_thousand_points.txt'
+#point_list = read_points_from_file(file_path)
+start = time.time()
+#print("hello")
 
 DT = DelaunayTriangulation(X_BOUND, Y_BOUND)
-for x, y in zip(xs, ys):
+i = 0
+for x, y in point_list:
     DT.increment(Point(x, y))
+    i += 1
+    if i % 1000 == 0:
+        checkpoint = time.time()
+        print(i)
+        print(checkpoint - start)
 
-# Remove the super triangle on the outside
-
-# Helps in determining the neighbours of triangles. I felt it might help in the future
-
-
-# Creating a Triangulation without specifying the triangles results in the
-# Delaunay triangulation of the points.
-
-# Create the Triangulation; no triangles so Delaunay triangulation created.
-triang = tri.Triangulation(xs, ys)
-
-# Plot the triangulation.
+DT.remove_frame()
+xs, ys, ts = DT.get_values()
+end = time.time()
+print(end - start)
 fig, ax = plt.subplots()
 ax.margins(0.1)
 ax.set_aspect('equal')
-ax.triplot(triang, 'bo-')
 
-# print(XS)
-# print(YS)
-# print(TS)
-
+ax.triplot(tri.Triangulation(xs, ys, ts), 'k-o')
 ax.set_title('Plot of Delaunay triangulation')
 
 plt.show()

@@ -2,6 +2,8 @@ import numpy as np
 from scipy.spatial import Delaunay
 import matplotlib.pyplot as plt
 from matplotlib.patches import Polygon
+import json
+import time
 
 def voronoi(points):
     # Perform Delaunay triangulation
@@ -79,12 +81,12 @@ def plot_voronoi(points, triangles):
     fig, ax = plt.subplots()
 
     # Plot the input points
-    ax.plot(points[:, 0], points[:, 1], 'bo')
+    ax.plot(points[:, 0], points[:, 1], 'ko')
 
     # Plot the Voronoi edges as polygons
     for triangle in triangles:
         vertices = points[list(triangle)]
-        polygon = Polygon(vertices, edgecolor='r', fill=False)
+        polygon = Polygon(vertices, fill=False)
         ax.add_patch(polygon)
 
     # Set plot limits and labels
@@ -98,14 +100,17 @@ def plot_voronoi(points, triangles):
     plt.show()
 
 # Example usage:
-points = np.array([
-    (2.5, 2.5),
-    (4, 7.5),
-    (7.5, 2.5),
-    (6, 7.5),
-    (4, 4),
-    (3, 3),
-    (6, 3),
-])
-vd = voronoi(points)
-plot_voronoi(points, list(vd))
+def read_points_from_file(file_path):
+    with open(file_path, 'r') as file:
+        content = file.read()
+        points = json.loads(content)
+        return points
+file_path = 'thousand_points.txt'
+point_list = np.array(read_points_from_file(file_path))
+start = time.time()
+
+print("hello"),
+vd = voronoi(point_list)
+end = time.time()
+print(end - start)
+plot_voronoi(point_list, list(vd))
